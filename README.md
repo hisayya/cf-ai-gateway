@@ -1,5 +1,12 @@
 # cf-ai-gateway
 
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-F9F1E1?style=flat-square&logo=bun&logoColor=black)
+![GitHub stars](https://img.shields.io/github/stars/hisayya/cf-ai-gateway?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+
+
 > **OpenAI-compatible, multi-provider AI gateway running on Cloudflare Workers.**
 > One endpoint, many upstreams — with weighted load balancing, automatic failover, and streaming-friendly SSE keep-alive.
 

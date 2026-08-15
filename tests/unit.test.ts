@@ -32,7 +32,7 @@ describe("isContextOverflowError", () => {
 		expect(isContextOverflowError(400, '{"code":"context_length_exceeded"}')).toBe(true);
 		expect(isContextOverflowError(400, "prompt is too long: 105000 tokens > 200000 maximum")).toBe(true);
 		expect(isContextOverflowError(413, "too many input tokens")).toBe(true);
-		expect(isContextOverflowError(400, "输入token超出模型上下文长度限制")).toBe(true);
+		expect(isContextOverflowError(400, "\u8f93\u5165token\u8d85\u51fa\u6a21\u578b\u4e0a\u4e0b\u6587\u957f\u5ea6\u9650\u5236")).toBe(true);
 		expect(isContextOverflowError(400, "Please reduce the length of the messages.")).toBe(true);
 	});
 	test("does not match non-overflow errors", () => {

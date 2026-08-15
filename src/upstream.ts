@@ -37,8 +37,8 @@ const CONTEXT_OVERFLOW_PATTERNS: RegExp[] = [
 	/reduce the length of (?:the |your )?(?:messages|prompt|input)/i,
 	/input (?:tokens?|length) (?:is |are )?too (?:long|large)/i,
 	/too many (?:input )?tokens/i,
-	/超出.{0,12}(?:上下文|长度|token)/i,
-	/(?:上下文|长度|token).{0,12}(?:超限|超出|超过)/i,
+	/\u8d85\u51fa.{0,12}(?:\u4e0a\u4e0b\u6587|\u957f\u5ea6|token)/i,
+	/(?:\u4e0a\u4e0b\u6587|\u957f\u5ea6|token).{0,12}(?:\u8d85\u9650|\u8d85\u51fa|\u8d85\u8fc7)/i,
 ];
 
 /**
