@@ -193,6 +193,8 @@ async function handleCompletion(request: Request, env: Env, upstreamPath: string
 			}
 			console.log(
 			JSON.stringify({
+				// "warn" per production-logging convention: recovered via failover.
+				level: attempts.length > 0 ? "warn" : "info",
 				requestId,
 				model: requestedModel,
 				provider: target.provider.name,
@@ -409,6 +411,8 @@ function streamCompletion(
 					write(`: x-gw-provider ${target.provider.name} x-gw-model ${target.model}\n\n`);
 					console.log(
 						JSON.stringify({
+							// "warn" per production-logging convention: recovered via failover.
+							level: attempts.length > 0 ? "warn" : "info",
 							requestId,
 							model: requestedModel,
 							provider: target.provider.name,
