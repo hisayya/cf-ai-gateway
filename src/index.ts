@@ -45,12 +45,13 @@ export default {
 		}
 
 		// Malformed/host-less requests (e.g. internet port-scanner probes) carry a
-		// non-absolute url that would throw in URL parsing; answer them cleanly.
+		// non-absolute url that would throw in URL parsing. RFC 7230 §5.4: answer
+		// malformed requests with 400 Bad Request instead of crashing.
 		let path: string;
 		try {
 			path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
 		} catch {
-			return json({ error: { message: "Not found", type: "invalid_request_error", code: 404 } }, 404);
+			return json({ error: { message: "Bad request: invalid request target or missing Host header", type: "invalid_request_error", code: 400 } }, 400);
 		}
 		if (path === "/health") return json({ ok: true, providers: PROVIDERS.length, routes: MODEL_ROUTES.length }, 200);
 

@@ -8,6 +8,10 @@ const port = Number(Bun.env.PORT ?? 567);
 
 Bun.serve({
 	port,
+	// Bind IPv4 only: the origin is reached exclusively via Cloudflare's IPv4
+	// origin-pull (DNS has no AAAA record), and an IPv6 wildcard listener would
+	// be an unfiltered path past the IPv4-only firewall chain.
+	hostname: "0.0.0.0",
 	// Bun's default idleTimeout is 10s and silently kills SSE streams with
 	// sparse bytes (oven-sh/bun#27479). The gateway's 2s heartbeat already
 	// keeps every connection non-idle; 255 (Bun's maximum) adds defense in
