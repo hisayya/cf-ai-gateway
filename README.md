@@ -53,6 +53,14 @@ Built for a **zero-ops, pay-as-you-go edge**: it runs entirely on Cloudflare Wor
 
 **How a request flows:** client → (optional auth) → model resolution → weighted candidate ordering → try upstreams in order with per-provider cooldowns → on success, **stream chunks / JSON verbatim** back to the client with `x-gw-provider` / `x-gw-model` / `x-gw-request-id` headers.
 
+## 💡 Use cases
+
+- **One SDK, zero code change** — you're building against multiple LLM providers but don't want to write (and maintain) a separate SDK per vendor. Point your app at one OpenAI-compatible endpoint and switch providers by editing a config, not your code.
+- **Dodge rate-limits & outages** — one provider is down, 429'ing, or rejecting your key: the gateway fails over to the next upstream automatically instead of erroring out.
+- **Spend-optimize smoothly** — a free-tier quota runs out but you're not ready to commit to a paid provider: flip routing weights to shift load across your pool, zero downtime.
+- **Edge-native, pay-as-you-go** — you need an AI sidecar on Cloudflare Workers with no server to babysit and no idle-time bill.
+
+
 ---
 
 ## 🚀 Getting started
