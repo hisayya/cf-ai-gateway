@@ -44,7 +44,14 @@ export default {
 			return new Response(null, { status: 204, headers: CORS_HEADERS });
 		}
 
-		const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+		// Malformed/host-less requests (e.g. internet port-scanner probes) carry a
+		// non-absolute url that would throw in URL parsing; answer them cleanly.
+		let path: string;
+		try {
+			path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+		} catch {
+			return json({ error: { message: "Not found", type: "invalid_request_error", code: 404 } }, 404);
+		}
 		if (path === "/health") return json({ ok: true, providers: PROVIDERS.length, routes: MODEL_ROUTES.length }, 200);
 
 		if (path === "/v1/models" || path === "/models") {
