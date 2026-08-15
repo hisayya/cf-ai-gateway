@@ -192,17 +192,20 @@ async function handleCompletion(request: Request, env: Env, upstreamPath: string
 				continue;
 			}
 			console.log(
-				JSON.stringify({
-					requestId,
-					model: requestedModel,
-					provider: target.provider.name,
-					upstreamModel: target.model,
-					status: upstreamRes.status,
-					ms: Date.now() - startedAt,
-				}),
-			);
-			return passThrough(upstreamRes, target, requestId, text);
-		}
+			JSON.stringify({
+				requestId,
+				model: requestedModel,
+				provider: target.provider.name,
+				upstreamModel: target.model,
+				status: upstreamRes.status,
+				ms: Date.now() - startedAt,
+				// Full history of the candidates that were skipped before this
+				// one succeeded, so failover causes are auditable after the fact.
+				...(attempts.length > 0 ? { attempts } : {}),
+			}),
+		);
+		return passThrough(upstreamRes, target, requestId, text);
+	}
 
 		// Error path: body is small, safe to read fully for diagnostics.
 		const detail = snippet(await upstreamRes.text());
@@ -413,6 +416,8 @@ function streamCompletion(
 							status: upstreamRes.status,
 							stream: true,
 							ms: Date.now() - startedAt,
+							// Skipped-candidate history: makes failover causes auditable.
+							...(attempts.length > 0 ? { attempts } : {}),
 						}),
 					);
 					activeReader = upstreamRes.body.getReader();
