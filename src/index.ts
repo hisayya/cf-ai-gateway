@@ -474,10 +474,16 @@ function streamCompletion(
 					if (!tail.includes("[DONE]")) {
 						// Upstream closed without the SSE sentinel: the generation
 						// was truncated server-side (e.g. relay killing long
-						// streams). Emit an explicit in-stream error so clients
-						// can surface it and retry, instead of silently showing
-						// half an answer.
-						write(`data: ${JSON.stringify({ error: { message: "upstream ended the stream before completion (truncated); please retry", type: "upstream_truncated", code: "stream_truncated" } })}\n\n`);
+						// streams). Emit OpenRouter's canonical mid-stream error
+						// shape - top-level error PLUS a choices entry with
+						// finish_reason:"error" - so parsers keyed on either
+						// signal can surface it and retry, instead of silently
+						// showing half an answer.
+						write(`data: ${JSON.stringify({
+							error: { message: "upstream ended the stream before completion (truncated); please retry", type: "upstream_truncated", code: "stream_truncated" },
+							choices: [{ index: 0, delta: {}, finish_reason: "error" }],
+						})}\n\n`);
+						write("data: [DONE]\n\n");
 					}
 					logStreamEnd("upstream_done");
 				} catch {
