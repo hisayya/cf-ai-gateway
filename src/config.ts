@@ -99,6 +99,10 @@ export const MODEL_ROUTES: ModelRoute[] = [
 			// leaves the same flagship model reachable.
 			{ provider: "openrouter", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
 			{ provider: "kilo", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
+			// Tier 3: Ollama Cloud's subscription-free 120B-class MoE models,
+			// an independent provider behind the flagship free tier.
+			{ provider: "ollama", model: "gpt-oss:120b", priority: 3 },
+			{ provider: "ollama", model: "nemotron-3-super", priority: 3 },
 		],
 	},
 ];
