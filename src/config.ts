@@ -119,7 +119,7 @@ export const RATE_LIMIT_COOLDOWN_S = 60;
 // client, so park the offender briefly so an immediate client retry (with
 // auto-retry backoff of a few seconds) lands on a healthy tier instead of
 // walking back into the same relay-side cap.
-export const TRUNCATION_COOLDOWN_S = 30;
+export const TRUNCATION_COOLDOWN_S = 5;
 // How long a provider is skipped after auth errors (seconds): key likely dead.
 export const AUTH_ERROR_COOLDOWN_S = 600;
 // Default upstream header timeout (ms). Large-context requests (hundreds of
