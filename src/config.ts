@@ -94,18 +94,11 @@ export const MODEL_ROUTES: ModelRoute[] = [
 			{ provider: "ark-coding", model: "glm-5.3", priority: 1 },
 			{ provider: "ark-plan", model: "deepseek-v4-pro", priority: 1 },
 			{ provider: "ark-coding", model: "deepseek-v4-pro", priority: 1 },
-			// Tier 2: last-resort floor, only when everything above failed.
-			// Equal-weight free pool across two providers: nemotron-ultra is
-			// dual-homed (openrouter + kilo) so an outage of either gateway
-			// still leaves the same model reachable; step-3.7-flash adds a
-			// different model family for diversity.
+			// Tier 2: last-resort floor. nemotron-ultra (550B, 1M ctx) is
+			// dual-homed on openrouter + kilo: outage of either gateway still
+			// leaves the same flagship model reachable.
 			{ provider: "openrouter", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
 			{ provider: "kilo", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
-			{ provider: "kilo", model: "stepfun/step-3.7-flash:free", priority: 2 },
-			// Ollama Cloud free-access tier (no subscription): small but
-			// independent fourth provider for last-resort diversity.
-			{ provider: "ollama", model: "nemotron-3-nano:30b", priority: 2 },
-			{ provider: "ollama", model: "gemma4:31b", priority: 2 },
 		],
 	},
 ];
