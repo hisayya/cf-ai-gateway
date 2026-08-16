@@ -346,6 +346,9 @@ function streamCompletion(
 
 	const attempts: AttemptLog[] = [];
 	let activeReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+	// Assigned once the winning upstream starts pumping; lets cancel()
+	// (client disconnect) emit the same terminal stream_end event.
+	let logStreamEnd: ((reason: "upstream_done" | "upstream_error" | "client_cancel") => void) | undefined;
 
 	const stream = new ReadableStream<Uint8Array>({
 		async start(controller) {
@@ -431,17 +434,47 @@ function streamCompletion(
 						}),
 					);
 					activeReader = upstreamRes.body.getReader();
-					try {
-						for (;;) {
-							const { done, value } = await activeReader.read();
-							if (done) break;
-							restartHeartbeat();
-							controller.enqueue(value);
-						}
-					} catch {
-						// upstream broke mid-stream; nothing recoverable
+				// Stream-end forensics: log exactly one terminal event per
+				// stream so truncation incidents name the responsible layer
+				// (upstream ended early / upstream broke / client stopped).
+				let endLogged = false;
+				let chunks = 0;
+				let bytes = 0;
+				let lastValue: Uint8Array | undefined;
+				const tailDecoder = new TextDecoder();
+				logStreamEnd = (reason: "upstream_done" | "upstream_error" | "client_cancel") => {
+					if (endLogged) return;
+					endLogged = true;
+					const tail = lastValue === undefined ? "" : tailDecoder.decode(lastValue.slice(-64));
+					console.log(
+						JSON.stringify({
+							level: reason === "upstream_done" ? "info" : "warn",
+							event: "stream_end",
+							reason,
+							requestId,
+							provider: target.provider.name,
+							chunks,
+							bytes,
+							// Whether the upstream sent the SSE [DONE] sentinel.
+							terminated: tail.includes("[DONE]"),
+						}),
+					);
+				};
+				try {
+					for (;;) {
+						const { done, value } = await activeReader.read();
+						if (done) break;
+						restartHeartbeat();
+						chunks += 1;
+						bytes += value.byteLength;
+						lastValue = value;
+						controller.enqueue(value);
 					}
-					return;
+					logStreamEnd("upstream_done");
+				} catch {
+					logStreamEnd("upstream_error");
+				}
+				return;
 				}
 				// All candidates failed after the SSE response was committed.
 				console.log(JSON.stringify({ requestId, model: requestedModel, status: 502, stream: true, attempts }));
@@ -457,6 +490,7 @@ function streamCompletion(
 			}
 		},
 		cancel(reason) {
+			logStreamEnd?.("client_cancel");
 			void activeReader?.cancel(reason);
 		},
 	});
