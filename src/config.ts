@@ -63,6 +63,13 @@ export const PROVIDERS: ProviderConfig[] = [
 		baseUrl: "https://api.kilo.ai/api/gateway",
 		keySecret: "KEY_KILO",
 	},
+	{
+		// Ollama Cloud (OpenAI-compatible at ollama.com/v1; api.ollama.com
+		// 401s). Without a subscription only the small models are callable.
+		name: "ollama",
+		baseUrl: "https://ollama.com/v1",
+		keySecret: "KEY_OLLAMA",
+	},
 ];
 
 // ---------------------------------------------------------------------------
@@ -95,6 +102,10 @@ export const MODEL_ROUTES: ModelRoute[] = [
 			{ provider: "openrouter", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
 			{ provider: "kilo", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
 			{ provider: "kilo", model: "stepfun/step-3.7-flash:free", priority: 2 },
+			// Ollama Cloud free-access tier (no subscription): small but
+			// independent fourth provider for last-resort diversity.
+			{ provider: "ollama", model: "nemotron-3-nano:30b", priority: 2 },
+			{ provider: "ollama", model: "gemma4:31b", priority: 2 },
 		],
 	},
 ];
