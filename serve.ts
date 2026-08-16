@@ -6,7 +6,7 @@ import handler from "./src/index";
 
 const port = Number(Bun.env.PORT ?? 567);
 
-Bun.serve({
+const server = Bun.serve({
 	port,
 	// Bind IPv4 only: the origin is reached exclusively via Cloudflare's IPv4
 	// origin-pull (DNS has no AAAA record), and an IPv6 wildcard listener would
@@ -31,5 +31,36 @@ Bun.serve({
 		);
 	},
 });
+
+// Graceful shutdown (systemd restart/stop sends SIGTERM): stop accepting new
+// connections immediately, but let in-flight requests and SSE streams finish
+// draining before exit. Without this, `systemctl restart` truncates active
+// streams mid-response. TimeoutStopSec in the unit (30s) matches DRAIN_MS.
+const DRAIN_MS = 25_000;
+let draining = false;
+for (const sig of ["SIGTERM", "SIGINT"] as const) {
+	process.on(sig, () => {
+		if (draining) return;
+		draining = true;
+		console.log(JSON.stringify({ level: "info", event: "drain_start", signal: sig }));
+		server.stop(false); // close listener; keep active connections alive
+		const poll = setInterval(() => {
+			// Exit early once nothing is in flight (best effort: Bun exposes
+			// pendingRequests on newer versions; fall back to timeout only).
+			if (typeof (server as { pendingRequests?: number }).pendingRequests === "number") {
+				if ((server as { pendingRequests?: number }).pendingRequests! <= 0) {
+					clearInterval(poll);
+					console.log(JSON.stringify({ level: "info", event: "drain_complete" }));
+					process.exit(0);
+				}
+			}
+		}, 500);
+		setTimeout(() => {
+			clearInterval(poll);
+			console.log(JSON.stringify({ level: "info", event: "drain_timeout_exit" }));
+			process.exit(0);
+		}, DRAIN_MS);
+	});
+}
 
 console.log(`cf-ai-gateway (bun) listening on :${port}`);
