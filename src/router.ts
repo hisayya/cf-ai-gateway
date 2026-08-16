@@ -37,36 +37,19 @@ export function cooldownRemainingS(provider: string): number {
 	return Math.max(0, Math.ceil((until - Date.now()) / 1000));
 }
 
-/** True when the model is a known route alias or a valid "provider/model" form. */
+/** True when the model is a known route alias. */
 export function routeExists(model: string): boolean {
-	if (routeIndex.has(model)) return true;
-	const slash = model.indexOf("/");
-	if (slash > 0) {
-		const provider = providerIndex.get(model.slice(0, slash));
-		return provider !== undefined && model.slice(slash + 1).length > 0;
-	}
-	return false;
+	return routeIndex.has(model);
 }
 
 /**
  * Resolve a requested model name into an ordered candidate list.
- * Two forms are supported:
- *  1. Route alias (e.g. "fast") -> load-balanced failover chain.
- *  2. Direct form "provider/model" (e.g. "deepseek/deepseek-chat") -> single target.
- * Providers currently in cooldown are dropped; returns null when no usable
- * target remains.
+ * Only route aliases (e.g. "auto") are accepted: the gateway intentionally
+ * exposes nothing else, so clients cannot reach upstream models outside
+ * the configured failover chains. Providers currently in cooldown are
+ * dropped; returns null when no usable target remains.
  */
 export function resolveCandidates(requestedModel: string): ResolvedTarget[] | null {
-	// Direct "provider/model" form takes precedence over aliases.
-	const slash = requestedModel.indexOf("/");
-	if (slash > 0) {
-		const provider = providerIndex.get(requestedModel.slice(0, slash));
-		const model = requestedModel.slice(slash + 1);
-		if (provider !== undefined && model.length > 0) {
-			return [{ provider, model }];
-		}
-	}
-
 	const targets = routeIndex.get(requestedModel);
 	if (targets === undefined) return null;
 
