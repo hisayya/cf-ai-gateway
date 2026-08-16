@@ -56,6 +56,13 @@ export const PROVIDERS: ProviderConfig[] = [
 		baseUrl: "https://ai.lfree.org/v1",
 		keySecret: "KEY_LFREE",
 	},
+	{
+		// Kilo AI Gateway (OpenAI-compatible). Free models carry a ":free"
+		// suffix and survive ~200 req/h per key.
+		name: "kilo",
+		baseUrl: "https://api.kilo.ai/api/gateway",
+		keySecret: "KEY_KILO",
+	},
 ];
 
 // ---------------------------------------------------------------------------
@@ -81,7 +88,13 @@ export const MODEL_ROUTES: ModelRoute[] = [
 			{ provider: "ark-plan", model: "deepseek-v4-pro", priority: 1 },
 			{ provider: "ark-coding", model: "deepseek-v4-pro", priority: 1 },
 			// Tier 2: last-resort floor, only when everything above failed.
+			// Equal-weight free pool across two providers: nemotron-ultra is
+			// dual-homed (openrouter + kilo) so an outage of either gateway
+			// still leaves the same model reachable; step-3.7-flash adds a
+			// different model family for diversity.
 			{ provider: "openrouter", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
+			{ provider: "kilo", model: "nvidia/nemotron-3-ultra-550b-a55b:free", priority: 2 },
+			{ provider: "kilo", model: "stepfun/step-3.7-flash:free", priority: 2 },
 		],
 	},
 ];
