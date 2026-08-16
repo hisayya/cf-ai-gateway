@@ -81,9 +81,14 @@ export default {
 			return handleCompletion(request, env, isLegacyCompletion ? "/completions" : "/chat/completions");
 		}
 
+		logNotFound("unknown_path", path);
 		return openAIError(404, "not_found", `unknown path: ${path}`);
 	},
 } satisfies ExportedHandler<Env>;
+
+function logNotFound(kind: "unknown_path" | "unknown_model", detail: string): void {
+	console.log(JSON.stringify({ level: "warn", event: kind, detail }));
+}
 
 async function handleCompletion(request: Request, env: Env, upstreamPath: string): Promise<Response> {
 	if (request.method !== "POST") {
@@ -119,6 +124,7 @@ async function handleCompletion(request: Request, env: Env, upstreamPath: string
 			return openAIError(503, "upstream_unavailable", `all upstreams for "${requestedModel}" are cooling down [${cooling}]`);
 		}
 		const known = MODEL_ROUTES.map((r) => r.alias).join(", ");
+		logNotFound("unknown_model", requestedModel);
 		return openAIError(404, "model_not_found", `unknown model "${requestedModel}". available: ${known}`);
 	}
 
@@ -463,9 +469,20 @@ function checkAuth(request: Request, env: Env): Response | null {
 	const header = request.headers.get("authorization") ?? "";
 	const token = header.startsWith("Bearer ") ? header.slice(7) : "";
 	if (!timingSafeEqualStr(token, expected)) {
+		// Rejections must be auditable: a silently-401ing client is the
+		// classic "wrong key in one of several clients" forensic blind spot.
+		console.log(JSON.stringify({ level: "warn", event: "auth_failed", method: request.method, path: safePath(request) }));
 		return openAIError(401, "invalid_api_key", "missing or invalid gateway key");
 	}
 	return null;
+}
+
+function safePath(request: Request): string {
+	try {
+		return new URL(request.url).pathname;
+	} catch {
+		return "?";
+	}
 }
 
 function timingSafeEqualStr(a: string, b: string): boolean {
