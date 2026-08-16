@@ -470,6 +470,15 @@ function streamCompletion(
 						lastValue = value;
 						controller.enqueue(value);
 					}
+					const tail = lastValue === undefined ? "" : tailDecoder.decode(lastValue.slice(-64));
+					if (!tail.includes("[DONE]")) {
+						// Upstream closed without the SSE sentinel: the generation
+						// was truncated server-side (e.g. relay killing long
+						// streams). Emit an explicit in-stream error so clients
+						// can surface it and retry, instead of silently showing
+						// half an answer.
+						write(`data: ${JSON.stringify({ error: { message: "upstream ended the stream before completion (truncated); please retry", type: "upstream_truncated", code: "stream_truncated" } })}\n\n`);
+					}
 					logStreamEnd("upstream_done");
 				} catch {
 					logStreamEnd("upstream_error");
