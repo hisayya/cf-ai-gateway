@@ -114,6 +114,11 @@ export const GATEWAY_KEY_SECRET = "GATEWAY_KEY";
 // How long a provider is skipped after a rate limit (seconds), unless the
 // upstream sends a Retry-After header.
 export const RATE_LIMIT_COOLDOWN_S = 60;
+// How long a provider is skipped after TRUNCATING a stream (closing without
+// the SSE [DONE] sentinel): the in-flight response is already lost to the
+// client, so park the offender long enough that subsequent requests - which
+// would likely suffer the same relay-side cap - fail over to a healthy tier.
+export const TRUNCATION_COOLDOWN_S = 300;
 // How long a provider is skipped after auth errors (seconds): key likely dead.
 export const AUTH_ERROR_COOLDOWN_S = 600;
 // Default upstream header timeout (ms). Large-context requests (hundreds of

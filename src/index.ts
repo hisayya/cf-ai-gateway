@@ -8,6 +8,7 @@ import {
 	PROVIDERS,
 	GATEWAY_KEY_SECRET,
 	RATE_LIMIT_COOLDOWN_S,
+	TRUNCATION_COOLDOWN_S,
 	AUTH_ERROR_COOLDOWN_S,
 } from "./config";
 import { resolveCandidates, routeExists, setCooldown, cooldownRemainingS } from "./router";
@@ -484,6 +485,10 @@ function streamCompletion(
 							choices: [{ index: 0, delta: {}, finish_reason: "error" }],
 						})}\n\n`);
 						write("data: [DONE]\n\n");
+						// Quarantine the truncating provider: this response is
+						// unrecoverable, but the next requests must not walk
+						// into the same relay-side cap.
+						setCooldown(target.provider.name, TRUNCATION_COOLDOWN_S);
 					}
 					logStreamEnd("upstream_done");
 				} catch {
